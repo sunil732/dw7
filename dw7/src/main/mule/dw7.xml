@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="fc0b9d95-11c5-4ef2-b566-1f7b39221a5f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="dw7Flow" doc:id="bac9821a-58bb-435f-b1d2-f6f42bb30a37" >
+		<http:listener doc:name="Listener" doc:id="935bb1a8-7f11-4d08-9e4c-676e477f4a00" config-ref="HTTP_Listener_config" path="/dw7"/>
+		<ee:transform doc:name="Transform Message" doc:id="6cd1851e-cd8d-4c82-a030-bd883958062f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var policyDetailfile=readUrl("classpath://examples/policybkp.csv","application/csv")
+
+var policyDetailfile1=readUrl("classpath://examples/policybkp1.csv","application/csv")
+
+var policyCommonResults=dw::core::Arrays::leftJoin(
+policyDetailfile,
+policyDetailfile1,
+(Ekansh) ->	Ekansh.policyID,
+(Bansal) -> Bansal.policyID
+)
+---
+//policyDetailfile
+//policyDetailfile1
+policyCommonResults]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="108ae6d6-7d7f-443e-91fa-e6553767be73" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="7af4693d-6f63-4177-834e-a115ca0444c5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
